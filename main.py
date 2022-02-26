@@ -13,14 +13,13 @@ def getdata(url):
     return r.text
 
 
-def get_links(website_link):
+def get_links(website_link, website):
     html_data = getdata(website_link)
     soup = BeautifulSoup(html_data, "html.parser")
     list_links = []
     for link in soup.find_all("a", href=True):
-
         # Append to list if new link contains original link
-        if str(link["href"]).startswith((str(website_link))):
+        if str(link["href"]).startswith((str(website))):
             list_links.append(link["href"])
 
         # Include all href that do not start with website link but with "/"
@@ -28,7 +27,7 @@ def get_links(website_link):
             if link["href"] not in dict_href_links:
                 print(link["href"])
                 dict_href_links[link["href"]] = None
-                link_with_www = website_link + link["href"][1:]
+                link_with_www = website + link["href"][1:]
                 print("adjusted link =", link_with_www)
                 list_links.append(link_with_www)
 
@@ -37,11 +36,11 @@ def get_links(website_link):
     return dict_links
 
 
-def get_subpage_links(l):
+def get_subpage_links(l, website):
     for link in tqdm(l):
         # If not crawled through this page start crawling and get links
         if l[link] == "Not-checked":
-            dict_links_subpages = get_links(link)
+            dict_links_subpages = get_links(link, website)
             # Change the dictionary value of the link to "Checked"
             l[link] = "Checked"
         else:
@@ -60,7 +59,7 @@ def get_subpages(link):
     counter, counter2 = None, 0
     while counter != 0:
         counter2 += 1
-        dict_links2 = get_subpage_links(dict_links)
+        dict_links2 = get_subpage_links(dict_links, website)
         # Count number of non-values and set counter to 0 if there are no values within the dictionary equal to the string "Not-checked"
         # https://stackoverflow.com/questions/48371856/count-the-number-of-occurrences-of-a-certain-value-in-a-dictionary-in-python
         counter = sum(value == "Not-checked" for value in dict_links2.values())
