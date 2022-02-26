@@ -6,10 +6,13 @@ import json
 # Notes
 # How to prevent yourself from getting blocked while scraping
 # https://www.scraperapi.com/blog/5-tips-for-web-scraping/
-dict_href_links = {}
+
 
 def getdata(url):
-    r = requests.get(url)
+    # add header to prevent being blocked (403 error) by wordpress websites
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+    r = requests.get(url, headers=headers)
     return r.text
 
 
@@ -77,4 +80,5 @@ def get_subpages(link):
 
 
 if __name__ == "__main__":
-    get_subpages("https://www.yourtestwebsite.nl/")
+    dict_href_links = {}
+    get_subpages("https://testwebsite.com/")
