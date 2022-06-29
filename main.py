@@ -1,19 +1,29 @@
+import sys
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 import json
+import pandas as pd
+from urllib.parse import urlparse
+import re
+
 
 # Notes
 # How to prevent yourself from getting blocked while scraping
 # https://www.scraperapi.com/blog/5-tips-for-web-scraping/
 
+# add header to prevent being blocked (403 error) by wordpress websites
+headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+
+
+stopwords_list = ['\?', '.jpeg', '.jpg', '.png', '.svg', '.pdf', 'email-protection']
+stopwords = re.compile('|'.join(stopwords_list), re.IGNORECASE)
 
 def getdata(url):
-    # add header to prevent being blocked (403 error) by wordpress websites
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
     r = requests.get(url, headers=headers)
     return r.text
+
 
 
 def get_links(website_link, website):
@@ -22,17 +32,17 @@ def get_links(website_link, website):
     list_links = []
     for link in soup.find_all("a", href=True):
         # Append to list if new link contains original link
-        if str(link["href"]).startswith((str(website))):
+        if (str(link["href"]).startswith(str(website))) and (stopwords.match(link["href"]) == None):
             list_links.append(link["href"])
 
         # Include all href that do not start with website link but with "/"
         if str(link["href"]).startswith("/"):
             if link["href"] not in dict_href_links:
-                print(link["href"])
                 dict_href_links[link["href"]] = None
-                link_with_www = website + link["href"][1:]
-                print("adjusted link =", link_with_www)
-                list_links.append(link_with_www)
+                link_with_www = urlparse(website).scheme + "://" + urlparse(website).netloc + "/" + link["href"][1:]
+                #print("adjusted link =", link_with_www, "status code =", requests.get(link_with_www, headers).status_code)
+                if (requests.get(link_with_www, headers).status_code != 404) and (stopwords.match(link["href"]) == None):
+                    list_links.append(link_with_www)
 
     # Convert list of links to dictionary and define keys as the links and the values as "Not-checked"
     dict_links = dict.fromkeys(list_links, "Not-checked")
@@ -74,11 +84,16 @@ def get_subpages(link):
         print("")
         dict_links = dict_links2
         # Save list in json file
-        a_file = open("data.json", "w")
+        a_file = open(str(netloc)+'.json', "w")
         json.dump(dict_links, a_file)
         a_file.close()
 
 
 if __name__ == "__main__":
     dict_href_links = {}
-    get_subpages("https://testwebsite.com/")
+    url = sys.argv[1]
+    #print(lol)
+    #url = 'https://www.easybell.de/wissen/'
+    netloc = urlparse(url).netloc.split('.')[1]
+    get_subpages(url)
+
