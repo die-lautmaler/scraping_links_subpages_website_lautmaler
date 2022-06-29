@@ -40,7 +40,6 @@ def get_links(website_link, website):
             if link["href"] not in dict_href_links:
                 dict_href_links[link["href"]] = None
                 link_with_www = urlparse(website).scheme + "://" + urlparse(website).netloc + "/" + link["href"][1:]
-                #print("adjusted link =", link_with_www, "status code =", requests.get(link_with_www, headers).status_code)
                 if (requests.get(link_with_www, headers).status_code != 404) and (stopwords.match(link["href"]) == None):
                     list_links.append(link_with_www)
 
@@ -92,8 +91,6 @@ def get_subpages(link):
 if __name__ == "__main__":
     dict_href_links = {}
     url = sys.argv[1]
-    #print(lol)
-    #url = 'https://www.easybell.de/wissen/'
     netloc = urlparse(url).netloc.split('.')[1]
     get_subpages(url)
 
