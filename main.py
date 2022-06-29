@@ -32,7 +32,7 @@ def get_links(website_link, website):
     list_links = []
     for link in soup.find_all("a", href=True):
         # Append to list if new link contains original link
-        if (str(link["href"]).startswith(str(website))) and (stopwords.match(link["href"]) == None):
+        if (str(link["href"]).startswith(str(website))) and (stopwords.match(link["href"]) != None):
             list_links.append(link["href"])
 
         # Include all href that do not start with website link but with "/"
@@ -40,7 +40,7 @@ def get_links(website_link, website):
             if link["href"] not in dict_href_links:
                 dict_href_links[link["href"]] = None
                 link_with_www = urlparse(website).scheme + "://" + urlparse(website).netloc + "/" + link["href"][1:]
-                if (requests.get(link_with_www, headers).status_code != 404) and (stopwords.match(link["href"]) == None):
+                if (requests.get(link_with_www, headers).status_code != 404) and (stopwords.match(link["href"]) != None):
                     list_links.append(link_with_www)
 
     # Convert list of links to dictionary and define keys as the links and the values as "Not-checked"
